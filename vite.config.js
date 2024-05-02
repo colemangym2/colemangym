@@ -6,6 +6,7 @@ import { onBackgroundMessage } from 'firebase/messaging/sw'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: '/colemangym/',
   plugins: [
     react(),
     VitePWA({
@@ -15,23 +16,23 @@ export default defineConfig({
         lang: 'es-ES',
         name: 'Coleman Gym',
         short_name: 'Gym',
-        Description: 'PWA creada',
+        description: 'PWA creada',
         theme_color: '#19223c',
         background_color: '#d4d4d4',
         icons: [
           {
-            src: 'logo60x60.png',
+            src: '/colemangym/logo60x60.png',
             sizes: '60x60',
             type: 'image/png',
           },
           {
-            src: 'logo192x192.png',
+            src: '/colemangym/logo192x192.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any',
           },
           {
-            src: 'logo512x512.png',
+            src: '/colemangym/logo512x512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable',
