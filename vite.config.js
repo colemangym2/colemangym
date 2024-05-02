@@ -21,18 +21,18 @@ export default defineConfig({
         background_color: '#d4d4d4',
         icons: [
           {
-            src: '/colemangym/logo60x60.png',
+            src: '/logo60x60.png',
             sizes: '60x60',
             type: 'image/png',
           },
           {
-            src: '/colemangym/logo192x192.png',
+            src: '/logo192x192.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any',
           },
           {
-            src: '/colemangym/logo512x512.png',
+            src: '/logo512x512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable',
