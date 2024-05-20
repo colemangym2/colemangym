@@ -3,9 +3,12 @@ import appFirebase from "../credenciales";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { getFirestore, collection, addDoc, serverTimestamp, getDocs } from "firebase/firestore";
 import Swal from 'sweetalert2';
-import { Button, Card, CardContent, Container, Grid, TextField, InputAdornment, Paper, TableContainer, Table, TableHead, TableBody, TableRow, TableCell } from '@mui/material';
+import { Button, Card, CardContent, Container, Grid, TextField, InputAdornment, Paper, TableContainer, Table, TableHead, TableBody, TableRow, TableCell, CircularProgress, IconButton } from '@mui/material';
 import Typography from '@mui/material/Typography';
-import Home from './Home'; // Importa el componente Home
+import Home from './Home';
+import NavBar from './NavBar';  // Importa el componente NavBar
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 
 const auth = getAuth(appFirebase);
 const db = getFirestore(appFirebase);
@@ -17,15 +20,23 @@ const Admins = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [users, setUsers] = useState([]);
-    const [redirectHome, setRedirectHome] = useState(false); // Estado para redirigir al componente Home
-    const [homeKey, setHomeKey] = useState(0); // Clave única para forzar la actualización del componente Home
+    const [redirectHome, setRedirectHome] = useState(false);
+    const [homeKey, setHomeKey] = useState(0);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         fetchUsers();
-    }, [homeKey]); // Agrega homeKey como dependencia para que se actualice cuando cambie
+    }, [homeKey]);
+
+    useEffect(() => {
+        if (auth.currentUser && auth.currentUser.email !== 'colemangym2@gmail.com') {
+            setRedirectHome(true);
+        }
+    }, []);
 
     const fetchUsers = async () => {
         try {
+            setLoading(true);
             const usersCollection = collection(db, "users");
             const querySnapshot = await getDocs(usersCollection);
             const userData = [];
@@ -41,12 +52,14 @@ const Admins = () => {
                     id: doc.id,
                     email: data.email,
                     registrationDate: registrationDate,
-                    password: data.password // Agrega la contraseña al objeto de datos del usuario
+                    password: data.password
                 });
             });
             setUsers(userData);
         } catch (error) {
             console.error("Error fetching users:", error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -59,15 +72,16 @@ const Admins = () => {
             });
             return;
         }
-    
+
         try {
+            setLoading(true);
             await createUserWithEmailAndPassword(auth, email, password);
             await addDoc(collection(db, "users"), {
                 email: email,
                 password: password,
                 registrationDate: serverTimestamp()
             });
-    
+
             Swal.fire({
                 icon: 'success',
                 title: 'Registro exitoso',
@@ -78,16 +92,18 @@ const Admins = () => {
             setPassword('');
             setConfirmPassword('');
             fetchUsers();
-            setRedirectHome(true); // Establece el estado para redirigir al componente Home
+            setRedirectHome(true);
         } catch (error) {
             Swal.fire({
                 icon: 'error',
                 title: 'Error de registro',
                 text: 'Hubo un problema al registrar el usuario. Por favor, inténtelo de nuevo más tarde.',
             });
+        } finally {
+            setLoading(false);
         }
     };
-    
+
     const handleTogglePasswordVisibility = () => {
         setShowPassword((prevShowPassword) => !prevShowPassword);
     };
@@ -96,99 +112,114 @@ const Admins = () => {
         setShowConfirmPassword((prevShowConfirmPassword) => !prevShowConfirmPassword);
     };
 
+    const handleLogout = () => {
+        auth.signOut().then(() => {
+            setRedirectHome(true);
+        });
+    };
+
     return (
-        <Container>
-            {/* Si se redirige a Home, no se muestra el resto del contenido de Admins */}
-            {redirectHome ? <Home key={homeKey} /> : (
-                <>
-                    <Typography variant="body1" align="center" gutterBottom>
-                        Bienvenido usuario {auth.currentUser.email} {/* Usar currentUser.email */}
-                    </Typography>
-                    <Grid container spacing={2}>
-                        <Grid item md={4}>
-                            <Card>
-                                <CardContent>
-                                    <TextField
-                                        autoFocus
-                                        margin="dense"
-                                        label="Correo electrónico"
-                                        type="email"
-                                        fullWidth
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                    />
-                                    <TextField
-                                        margin="dense"
-                                        label="Contraseña"
-                                        type={showPassword ? "text" : "password"}
-                                        fullWidth
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        InputProps={{
-                                            endAdornment: (
-                                                <InputAdornment position="end">
-                                                    <Button
-                                                        aria-label="toggle password visibility"
-                                                        onClick={handleTogglePasswordVisibility}
-                                                        edge="end"
-                                                    >
-                                                        {showPassword ? 'Ocultar' : 'Mostrar'}
-                                                    </Button>
-                                                </InputAdornment>
-                                            ),
-                                        }}
-                                    />
-                                    <TextField
-                                        margin="dense"
-                                        label="Confirmar contraseña"
-                                        type={showConfirmPassword ? "text" : "password"}
-                                        fullWidth
-                                        value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
-                                        InputProps={{
-                                            endAdornment: (
-                                                <InputAdornment position="end">
-                                                    <Button
-                                                        aria-label="toggle confirm password visibility"
-                                                        onClick={handleToggleConfirmPasswordVisibility}
-                                                        edge="end"
-                                                    >
-                                                        {showConfirmPassword ? 'Ocultar' : 'Mostrar'}
-                                                    </Button>
-                                                </InputAdornment>
-                                            ),
-                                        }}
-                                    />
-                                    <Button onClick={handleRegister} variant="contained">Registrar</Button>
-                                </CardContent>
-                            </Card>
+        <div>
+            <NavBar onLogout={handleLogout} />
+            <Container style={{ marginTop: '64px' }}>
+                {redirectHome ? <Home key={homeKey} /> : (
+                    <>
+                        <Typography variant="body1" align="center" gutterBottom>
+                            Bienvenido usuario {auth.currentUser.email}
+                        </Typography>
+                        <Grid container spacing={2}>
+                            <Grid item md={4}>
+                                <Card>
+                                    <CardContent>
+                                        <TextField
+                                            autoFocus
+                                            margin="dense"
+                                            label="Correo electrónico"
+                                            type="email"
+                                            fullWidth
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                        />
+                                        <TextField
+                                            margin="dense"
+                                            label="Contraseña"
+                                            type={showPassword ? "text" : "password"}
+                                            fullWidth
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            InputProps={{
+                                                endAdornment: (
+                                                    <InputAdornment position="end">
+                                                        <IconButton
+                                                            aria-label="toggle password visibility"
+                                                            onClick={handleTogglePasswordVisibility}
+                                                            edge="end"
+                                                        >
+                                                            {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                                                        </IconButton>
+                                                    </InputAdornment>
+                                                ),
+                                            }}
+                                        />
+                                        <TextField
+                                            margin="dense"
+                                            label="Confirmar contraseña"
+                                            type={showConfirmPassword ? "text" : "password"}
+                                            fullWidth
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            InputProps={{
+                                                endAdornment: (
+                                                    <InputAdornment position="end">
+                                                        <IconButton
+                                                            aria-label="toggle confirm password visibility"
+                                                            onClick={handleToggleConfirmPasswordVisibility}
+                                                            edge="end"
+                                                        >
+                                                            {showConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                                                        </IconButton>
+                                                    </InputAdornment>
+                                                ),
+                                            }}
+                                        />
+                                        <Button className="btn1" onClick={handleRegister} variant="contained" disabled={loading}>
+                                            Registrar
+                                            {loading && <CircularProgress size={24} style={{ marginLeft: '8px' }} />}
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                            <Grid item md={8}>
+                                {loading ? (
+                                    <CircularProgress />
+                                ) : (
+                                    <TableContainer component={Paper}>
+                                        <Table>
+                                            <TableHead>
+                                                <TableRow>
+                                                    <TableCell>Correo electrónico</TableCell>
+                                                    <TableCell>Contraseña</TableCell>
+                                                    <TableCell>Fecha de registro</TableCell>
+                                                </TableRow>
+                                            </TableHead>
+                                            <TableBody>
+                                                {users.map((user) => (
+                                                    <TableRow key={user.id}>
+                                                        <TableCell>{user.email}</TableCell>
+                                                        <TableCell>{user.password}</TableCell>
+                                                        <TableCell>{user.registrationDate}</TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
+                                )}
+                            </Grid>
                         </Grid>
-                        <Grid item md={8}>
-                            <TableContainer component={Paper}>
-                                <Table>
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableCell>Correo electrónico</TableCell>
-                                            <TableCell>Contraseña</TableCell>
-                                            <TableCell>Fecha de registro</TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {users.map((user) => (
-                                            <TableRow key={user.id}>
-                                                <TableCell>{user.email}</TableCell>
-                                                <TableCell>{user.password}</TableCell>  
-                                                <TableCell>{user.registrationDate}</TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-                        </Grid>
-                    </Grid> 
-                </>
-            )}
-        </Container>
+                    </>
+                )}
+            </Container>
+        </div>
     );
 };
 

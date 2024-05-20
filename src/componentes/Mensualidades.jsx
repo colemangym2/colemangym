@@ -55,43 +55,54 @@ const Mensualidades = ({ userId }) => {
     fetchMensualidades();
   }, [userId, forceUpdate]); // Añadir forceUpdate a la lista de dependencias
 
-  const handleDeleteMensualidad = async (mensualidadId) => {
-    const confirmation = await Swal.fire({
-      icon: 'warning',
-      title: '¿Estás seguro?',
-      text: 'Esta acción eliminará la mensualidad. ¿Estás seguro de que quieres continuar?',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
-    });
-  
-    if (confirmation.isConfirmed) {
-      try {
-        const db = getFirestore();
-        await deleteDoc(doc(db, 'mensualidades', mensualidadId));
-        setMensualidades(prevMensualidades => prevMensualidades.filter(mensualidad => mensualidad.id !== mensualidadId));
-        Swal.fire({
-          icon: 'success',
-          title: 'Mensualidad eliminada',
-          text: 'La mensualidad ha sido eliminada correctamente.',
-          timer: 2000,
-          timerProgressBar: true,
-          showConfirmButton: false
-        });
-        setForceUpdate(prev => !prev); // Forzar la actualización de la interfaz de usuario
-
-      } catch (error) {
-        console.error('Error al eliminar mensualidad:', error);
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Hubo un error al intentar eliminar la mensualidad. Por favor, inténtalo de nuevo más tarde.'
-        });
-      }
-    }
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const monthIndex = date.getMonth();
+    const year = date.getFullYear();
+    const months = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+    return `${day} ${months[monthIndex]} ${year}`;
   };
+
+const handleDeleteMensualidad = async (mensualidadId) => {
+  const confirmation = await Swal.fire({
+    icon: 'warning',
+    title: '¿Estás seguro?',
+    text: 'Esta acción eliminará la mensualidad. ¿Estás seguro de que quieres continuar?',
+    showCancelButton: true,
+    cancelButtonColor: '#3085d6',
+    confirmButtonColor: '#d33',
+    cancelButtonText: 'Cancelar',
+    confirmButtonText: 'Sí, eliminar',
+    reverseButtons: true,  // Esta línea asegura que los botones sean revertidos
+  });
+
+  if (confirmation.isConfirmed) {
+    try {
+      const db = getFirestore();
+      await deleteDoc(doc(db, 'mensualidades', mensualidadId));
+      setMensualidades(prevMensualidades => prevMensualidades.filter(mensualidad => mensualidad.id !== mensualidadId));
+      Swal.fire({
+        icon: 'success',
+        title: 'Mensualidad eliminada',
+        text: 'La mensualidad ha sido eliminada correctamente.',
+        timer: 2000,
+        timerProgressBar: true,
+        showConfirmButton: false
+      });
+      setForceUpdate(prev => !prev);
+
+    } catch (error) {
+      console.error('Error al eliminar mensualidad:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Hubo un error al intentar eliminar la mensualidad. Por favor, inténtalo de nuevo más tarde.'
+      });
+    }
+  }
+};
+
 
   const handleEditMensualidad = (mensualidad) => {
     setEditMensualidadData({
@@ -292,8 +303,9 @@ const Mensualidades = ({ userId }) => {
               <TableBody>
                 {mensualidadesPorAnio.map(mensualidad => (
                   <TableRow key={mensualidad.id}>
-                    <TableCell>{mensualidad.fechaInicio}</TableCell>
-                    <TableCell>{mensualidad.fechaFinalizacion}</TableCell>
+                    <TableCell>{formatDate(mensualidad.fechaInicio)}</TableCell>
+<TableCell>{formatDate(mensualidad.fechaFinalizacion)}</TableCell>
+
                     <TableCell>{mensualidad.pago}</TableCell>
                     <TableCell>
                       {mensualidadMasAlta && mensualidadMasAlta.id === mensualidad.id ? (
@@ -349,8 +361,8 @@ const Mensualidades = ({ userId }) => {
           </TableHead>
           <TableBody>
             <TableRow>
-              <TableCell>{mensualidadMasAlta ? mensualidadMasAlta.fechaInicio : 'No disponible'}</TableCell>
-              <TableCell>{mensualidadMasAlta ? mensualidadMasAlta.fechaFinalizacion : 'No disponible'}</TableCell>
+            <TableCell>{mensualidadMasAlta ? formatDate(mensualidadMasAlta.fechaInicio) : 'No disponible'}</TableCell>
+  <TableCell>{mensualidadMasAlta ? formatDate(mensualidadMasAlta.fechaFinalizacion) : 'No disponible'}</TableCell>
               <TableCell>
                 {mensualidadMasAlta ? (
                   <>
@@ -371,7 +383,7 @@ const Mensualidades = ({ userId }) => {
         </Table>
       </TableContainer>
       <hr></hr>
-      <Button
+      <Button className="btn1"
         variant="contained"
         onClick={handleAddMensualidadOpen}
         style={{ marginBottom: "16px" }}
@@ -427,21 +439,22 @@ const Mensualidades = ({ userId }) => {
           />
         </DialogContent>
         <DialogActions>
-          <Button
-            variant="contained"
-            onClick={handleNewMensualidadSave}
-            style={{ marginRight: "8px" }}
-            disabled={loading} // Deshabilitar el botón mientras se carga
-          >
-            {loading ? <CircularProgress size={24} color="inherit" /> : "Guardar"}
-          </Button>
-          <Button
+        <Button
             variant="outlined"
             onClick={() => setIsNewMensualidadOpen(false)}
             disabled={loading} // Deshabilitar el botón mientras se carga
           >
             Cancelar
           </Button>
+          <Button className="btn1"
+            variant="contained"
+            onClick={handleNewMensualidadSave}
+            style={{ marginRight: "8px" }}
+            disabled={loading} // Deshabilitar el botón mientras se carga
+          >
+            {loading ? <CircularProgress size={24}  /> : "Guardar"}
+          </Button>
+          
         </DialogActions>
       </Dialog>
 
@@ -489,7 +502,14 @@ const Mensualidades = ({ userId }) => {
           />
         </DialogContent>
         <DialogActions>
-          <Button
+        <Button
+            variant="outlined"
+            onClick={() => setIsEditMensualidadOpen(false)}
+            disabled={loading} // Deshabilitar el botón mientras se carga
+          >
+            Cancelar
+          </Button>
+          <Button className="btn1"
             variant="contained"
             onClick={handleEditMensualidadSave}
             style={{ marginRight: "8px" }}
@@ -497,13 +517,7 @@ const Mensualidades = ({ userId }) => {
           >
             {loading ? <CircularProgress size={24} color="inherit" /> : "Guardar"}
           </Button>
-          <Button
-            variant="outlined"
-            onClick={() => setIsEditMensualidadOpen(false)}
-            disabled={loading} // Deshabilitar el botón mientras se carga
-          >
-            Cancelar
-          </Button>
+          
         </DialogActions>
       </Dialog>
     </div>

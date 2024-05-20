@@ -6,8 +6,8 @@ import { Visibility, VisibilityOff } from '@mui/icons-material';
 import appFirebase from "../credenciales";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import Swal from 'sweetalert2';
+import { useNavigate } from 'react-router-dom';
 import Verificar from './Verificar';
-
 
 const auth = getAuth(appFirebase);
 
@@ -20,8 +20,10 @@ const Login = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const [internetAlert, setInternetAlert] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [showLogin, setShowLogin] = useState(true); // Estado para mostrar/ocultar el componente Login
+    const [showLogin, setShowLogin] = useState(true); 
     const [showVerificar, setShowVerificar] = useState(false);
+
+    const navigate = useNavigate();
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -42,6 +44,7 @@ const Login = () => {
                 timer: 1500
             });
             handleClose();
+            navigate('/home'); // Redirigir a Home después del inicio de sesión exitoso
         } catch (error) {
             setLoading(false);
             if (error.code === "auth/network-request-failed") {
@@ -89,10 +92,8 @@ const Login = () => {
                 </Grid>
             </Grid>
 
-            {/* Botón "Verificar" */}
             <Button variant="contained" onClick={handleVerificar} style={{ display: showLogin ? 'block' : 'none' }}>Verificar</Button>
 
-            {/* Mostrar el componente Verificar si showVerificar es true */}
             {showVerificar && <Verificar onBackToLogin={handleBackToLogin} />}
 
             <Dialog open={open} onClose={handleClose}>
@@ -136,21 +137,20 @@ const Login = () => {
                     )}
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleClose}>Cancelar</Button>
-                    <Button onClick={handleLogin} variant="contained" disabled={loading}>Iniciar Sesión</Button>
-                </DialogActions>
-
-                {/* Animación de carga */}
-                <Backdrop
-                    sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-                    open={loading}
-                    onClick={handleClose}
-                >
-                    <CircularProgress color="inherit" />
-                </Backdrop>
-            </Dialog>
-        </Container>
-    );
+                    <Button onClick={
+handleClose}>Cancelar</Button>
+<Button onClick={handleLogin} variant="contained" disabled={loading}>Iniciar Sesión</Button>
+</DialogActions>
+<Backdrop
+                sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                open={loading}
+                onClick={handleClose}
+            >
+                <CircularProgress color="inherit" />
+            </Backdrop>
+        </Dialog>
+    </Container>
+);
 };
 
 export default Login;

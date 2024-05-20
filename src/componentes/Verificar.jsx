@@ -55,21 +55,22 @@ const Verificar = ({ onBackToLogin }) => {
             <Button onClick={handleOpen}>Verificar Cédula</Button>
             <Dialog open={open} onClose={handleClose}>
                 
-                <DialogContent>
-                    <Typography variant="body1" gutterBottom style={{ marginBottom: '8px' }}> {/* Añadir margen inferior al título */}
-                        Ingrese el número de CI:
-                    </Typography>
-                    <TextField
-                        id="cedula"
-                        label="Cédula del cliente"
-                        variant="outlined"
-                        value={cedula}
-                        onChange={(e) => setCedula(e.target.value)}
-                    />
-                    {cedulaNotFound && (
-                        <Alert severity="error">CI inexistente</Alert> 
-                    )}
-                </DialogContent>
+            <DialogContent>
+    <Typography variant="body1" gutterBottom style={{ marginBottom: '8px' }}> {/* Añadir margen inferior al título */}
+        Ingrese el número de CI:
+    </Typography>
+    <TextField
+        id="cedula"
+        label="Cédula del cliente"
+        variant="outlined"
+        value={cedula}
+        onChange={(e) => setCedula(e.target.value)}
+    />
+    {cedulaNotFound && (
+        <Alert severity="error">CI inexistente</Alert> 
+    )}
+</DialogContent>
+
                 <DialogActions>
                     <Button onClick={handleClose}>Cancelar</Button>
                     <Button onClick={handleVerificarCedula} disabled={verifying}>

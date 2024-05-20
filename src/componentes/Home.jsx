@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import appFirebase from "../credenciales";
-import UserDetails from './UserDetails'; // Ruta correcta al archivo UserDetails
-import Admins from './Admins'; // Ruta correcta al archivo Admins
+import UserDetails from './UserDetails';
+import Admins from './Admins';
+import NavBar from './NavBar';
 import { getAuth, signOut } from "firebase/auth";
 import {
   getFirestore,
@@ -15,7 +16,6 @@ import {
   deleteDoc,
   query,
   where,
-  writeBatch
 } from "firebase/firestore";
 import {
   AppBar,
@@ -40,13 +40,14 @@ import {
   Backdrop,
   CircularProgress,
   Alert,
-  DialogContentText // Agregar importación de DialogContentText
+  DialogContentText
 } from "@mui/material";
 import MenuIcon from '@mui/icons-material/Menu';
 import InputLabel from '@mui/material/InputLabel';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { useNavigate } from "react-router-dom"; // Importa useNavigate
 
 const auth = getAuth(appFirebase);
 const db = getFirestore(appFirebase);
@@ -78,10 +79,12 @@ const Home = ({ correoUsuario }) => {
   });
   const [isHome, setIsHome] = useState(true);
   const [showUserDetails, setShowUserDetails] = useState(false);
-  const [loading, setLoading] = useState(false); // Estado para controlar la visibilidad de la animación de carga
-  const [showHome, setShowHome] = useState(true); // Estado para mostrar el componente Home
-  const [cedulaError, setCedulaError] = useState(false); // Estado para controlar la visibilidad de la alerta de error de cédula duplicada
-  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false); // Estado para controlar la apertura de la ventana de confirmación de eliminación
+  const [loading, setLoading] = useState(false);
+  const [showHome, setShowHome] = useState(true);
+  const [cedulaError, setCedulaError] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+
+  const navigate = useNavigate(); // Utiliza useNavigate
 
   const capturarInputs = (e) => {
     const { name, value } = e.target;
@@ -115,7 +118,6 @@ const Home = ({ correoUsuario }) => {
       const cedulaSnapshot = await getDocs(cedulaQuery);
 
       if (!cedulaSnapshot.empty) {
-        // Si ya existe un cliente con esa cédula, mostrar la alerta de error
         setCedulaError(true);
         setLoading(false);
         return;
@@ -152,6 +154,7 @@ const Home = ({ correoUsuario }) => {
       setLoading(false);
     }
   };
+
   const actualizarTablaUsuarios = async () => {
     try {
       const querySnapshot = await getDocs(collection(db, "clientes"));
@@ -166,7 +169,7 @@ const Home = ({ correoUsuario }) => {
   };
 
   useEffect(() => {
-    actualizarTablaUsuarios(); // Llamar a la función al cargar la página
+    actualizarTablaUsuarios();
     getCostoMensualidad();
   }, []);
 
@@ -194,152 +197,107 @@ const Home = ({ correoUsuario }) => {
     }
   };
 
-  const handleMenuClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleHomeClick = () => {
-    setIsAdmin(false);
-    setIsHome(true);
-    setSelectedUser(null);
-    setShowUserDetails(false);
-    setShowHome(true); // Mostrar Home al hacer clic en el botón "Inicio"
-    actualizarTablaUsuarios(); // Actualizar la tabla al hacer clic en el botón "Inicio"
-  };
-  const handleAdminClick = () => {
-    setIsAdmin(true);
-    setIsHome(false);
-    setShowUserDetails(false); // Asegúrate de establecer showUserDetails como false al cambiar a la pantalla de administrador
-    setShowHome(false); // Ocultar Home al cambiar a la pantalla de administrador
-  };
   const getColorByEstado = (user) => {
     const fechaFinalizacion = new Date(user.fechaFinalizacion);
     const fechaActual = new Date();
 
     if (fechaFinalizacion < fechaActual) {
-      return 'red';
+      return '#EC543C';
     } else if (user.pago < costoMensualidad) {
-      return 'yellow';
+      return '#ECE43C';
     } else {
       return 'white';
     }
   };
 
-  const handleEditUser = () => {
-    console.log("Editar usuario:", selectedUser);
+  const handleUserClick = (userId) => {
+    navigate(`/user/${userId}`); // Navega al componente UserDetails con el userId
   };
-
-  const handleUserClick = async (userId) => {
-    setSelectedUser(userId);
-    setShowUserDetails(true);
-    setShowHome(false); // Ocultar Home cuando se muestre UserDetails
-  };
-
+  
   const handleDeleteUser = async () => {
-    setConfirmDeleteOpen(true); // Abrir la ventana de confirmación de eliminación
-  };
+    setConfirmDeleteOpen(true);
+};
 
-  const handleConfirmDelete = async () => {
-    setConfirmDeleteOpen(false); // Cerrar la ventana de confirmación de eliminación
-
+const handleConfirmDelete = async () => {
+    setConfirmDeleteOpen(false);
+  
     try {
-      // Eliminar el correo de autenticación
+      // Eliminar el documento correspondiente en la colección 'users'
+      const userQuery = query(collection(db, "users"), where("email", "==", correoUsuario));
+      const userSnapshot = await getDocs(userQuery);
+  
+      userSnapshot.forEach(async (doc) => {
+        await deleteDoc(doc.ref);
+        console.log("Documento de usuario eliminado:", doc.id);
+      });
+  
+      // Eliminar el usuario de la autenticación
       const user = auth.currentUser;
       if (user) {
         await user.delete();
+        console.log("Usuario eliminado correctamente de la autenticación.");
       }
-
-      // Buscar el correo en la colección de usuarios y eliminar el documento correspondiente
-      const userQuery = query(collection(db, "users"), where("email", "==", correoUsuario));
-      const userSnapshot = await getDocs(userQuery);
-
-      userSnapshot.forEach(async (doc) => {
-        await deleteDoc(doc.ref);
-      });
-
-      // Mostrar un mensaje de éxito
+  
       console.log("Usuario eliminado correctamente.");
-
-      // Actualizar la lista de usuarios
       await actualizarTablaUsuarios();
     } catch (error) {
       console.error("Error al eliminar usuario:", error);
     }
-  };
+};
+  
+  
+  
 
   const handleCancelDelete = () => {
-    setConfirmDeleteOpen(false); // Cerrar la ventana de confirmación de eliminación
+    setConfirmDeleteOpen(false);
+ 
   };
 
   const handleReturnHome = () => {
-    setIsAdmin(false); // Asegúrate de configurar correctamente el estado isAdmin si es necesario
-    setShowUserDetails(false); // Asegúrate de ocultar UserDetails
-    setShowHome(true); // Asegúrate de mostrar Home al hacer clic en el botón "Volver a Home"
-    // Asegúrate de configurar otros estados necesarios según la lógica de tu aplicación
+    setIsAdmin(false);
+    setShowUserDetails(false);
+    setShowHome(true);
+    actualizarTablaUsuarios();
   };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    const day = date.getDate() + 1;
-    const month = date.getMonth() + 1;
-    const year = date.getFullYear();
-    return `${day < 10 ? '0' : ''}${day}/${month < 10 ? '0' : ''}${month}/${year}`;
+    
+    // Ajustar la fecha a la zona horaria local
+    const localDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+  
+    const day = localDate.getDate(); // Obtener el día del mes
+    const monthIndex = localDate.getMonth(); // Obtener el índice del mes
+    const year = localDate.getFullYear(); // Obtener el año
+  
+    // Array de nombres de los meses en español
+    const months = [
+      "ene", "feb", "mar", "abr", "may", "jun",
+      "jul", "ago", "sep", "oct", "nov", "dic"
+    ];
+  
+    // Formato deseado: [día] [nombre abreviado del mes] [año]
+    const formattedDate = `${day} ${months[monthIndex]} ${year}`;
+    return formattedDate;
   };
+  
+  
+  
+  
 
   return (
     <div style={{ marginTop: '67px' }}>
-      <AppBar position="fixed">
-  <Toolbar>
-    <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-      Coleman Gym
-    </Typography>
-    <IconButton
-      edge="end" // Cambiar de "start" a "end"
-      color="inherit"
-      aria-label="menu"
-      onClick={handleMenuClick}
-    >
-      <MenuIcon />
-    </IconButton>
-    <Menu
-      id="menu-appbar"
-      anchorEl={anchorEl}
-      anchorOrigin={{
-        vertical: 'top',
-        horizontal: 'right',
-      }}
-      keepMounted
-      transformOrigin={{
-        vertical: 'top',
-        horizontal: 'right',
-      }}
-      open={Boolean(anchorEl)}
-      onClose={handleMenuClose}
-    >
-      <MenuItem onClick={handleHomeClick}>Inicio</MenuItem>
-      <MenuItem onClick={handleAdminClick} disabled={correoUsuario !== "colemangym2@gmail.com"}>
-         Administrador
-      </MenuItem>
-      <MenuItem onClick={() => signOut(auth)}>Salir</MenuItem>
-    </Menu>
-  </Toolbar>
-</AppBar>
+      <NavBar correoUsuario={correoUsuario} />
 
-              
       {showHome && !selectedUser && !isAdmin && (
         <div>
           <Typography variant="body1" align="center" gutterBottom>
             Bienvenido usuario {correoUsuario}
-
-            {!isAdmin && correoUsuario !== "colemangym2@gmail.com" && ( // Agregar la condición para desactivar el botón
-        <IconButton onClick={handleDeleteUser} disabled={isAdmin || correoUsuario === "colemangym2@gmail.com"}> {/* Desactivar el botón si el usuario es un administrador o si el correo es "colemangym2@gmail.com" */}
-          <DeleteIcon sx={{ color: 'red' }} />
-        </IconButton>
-      )}
+            {!isAdmin && correoUsuario !== "colemangym2@gmail.com" && (
+              <IconButton onClick={handleDeleteUser} disabled={isAdmin || correoUsuario === "colemangym2@gmail.com"}>
+                <DeleteIcon sx={{ color: 'red' }} />
+              </IconButton>
+            )}
           </Typography>
           <Typography variant="body1" align="center" gutterBottom>
             Costo de mensualidad: {costoMensualidad} Bs
@@ -366,7 +324,7 @@ const Home = ({ correoUsuario }) => {
               <Grid item xs={12} sm={6}>
                 <div className="text-center">
                   <Typography variant="h4" align="center" gutterBottom>Agregar Cliente</Typography>
-                  <Button variant="contained" onClick={() => setOpen(true)}>
+                  <Button className="btn1" variant="contained" onClick={() => setOpen(true)}>
                     Agregar
                   </Button>
                   <Dialog open={open} onClose={() => setOpen(false)}>
@@ -406,13 +364,12 @@ const Home = ({ correoUsuario }) => {
                         value={user.Cedula}
                         onChange={capturarInputs}
                         name="Cedula"
-                        error={errors.Cedula || cedulaError} // Marcar como error si hay error en la cédula o si se detecta un duplicado
-                        helperText={(errors.Cedula || cedulaError) && "Este campo es obligatorio"} // Mostrar el mensaje de error si hay error en la cédula o si se detecta un duplicado
+                        error={errors.Cedula || cedulaError}
+                        helperText={(errors.Cedula || cedulaError) && "Este campo es obligatorio"}
                       />
                       {cedulaError && (
                         <Alert severity="error" style={{ marginTop: "8px" }}>Este número de cédula ya está registrado.</Alert>
                       )}
-
                       <div style={{ marginBottom: '16px' }}>
                         <InputLabel shrink htmlFor="fechaInicio">Fecha de Inicio</InputLabel>
                         <TextField
@@ -456,8 +413,7 @@ const Home = ({ correoUsuario }) => {
                     </DialogContent>
                     <DialogActions>
                       <Button onClick={() => setOpen(false)}>Cancelar</Button>
-                      <Button onClick={guardarDatos} variant="contained" disabled={loading}>
-                        {/* Agregar el CircularProgress */}
+                      <Button className="btn1" onClick={guardarDatos} variant="contained" disabled={loading}>
                         {loading ? <CircularProgress size={24} /> : "Guardar"}
                       </Button>
                     </DialogActions>
@@ -476,23 +432,23 @@ const Home = ({ correoUsuario }) => {
                 <TableRow>
                   <TableCell>Nombre</TableCell>
                   <TableCell>Finaliza</TableCell>
-                  <TableCell>Pagó (Bs)</TableCell>
+                  <TableCell>Pagó (Bs.)</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {lista.map((user) => (
-                  <TableRow key={user.id} style={{ backgroundColor: getColorByEstado(user) }} onClick={() => handleUserClick(user.id)}>
-                    <TableCell>{user.nombre}</TableCell>
-                    <TableCell>
-                      <div>
-                        {formatDate(user.fechaFinalizacion)}
-                      </div>
-                    </TableCell>
-                    <TableCell>{user.pago}</TableCell>
-                  </TableRow>
-                ))}
+  {lista.map((user) => (
+    <TableRow
+      key={user.id}
+      style={{ backgroundColor: getColorByEstado(user) }}
+      onClick={() => handleUserClick(user.id)} // Llama a handleUserClick con el ID del usuario
+    >
+      <TableCell>{user.nombre}</TableCell>
+      <TableCell>{formatDate(user.fechaFinalizacion)}</TableCell>
+      <TableCell>{user.pago}</TableCell>
+    </TableRow>
+  ))}
+</TableBody>
 
-              </TableBody>
             </Table>
           </Container>
         </div>
@@ -504,30 +460,29 @@ const Home = ({ correoUsuario }) => {
         <UserDetails
           userId={selectedUser}
           setShowUserDetails={setShowUserDetails}
-          setShowHome={setShowHome} // Pasar setShowHome como una prop
+          setShowHome={setShowHome}
         />
       )}
 
-      {/* Ventana de confirmación de eliminación */}
-      <Dialog
-        open={confirmDeleteOpen}
-        onClose={handleCancelDelete}
-      >
-        <DialogTitle>Confirmar eliminación</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
+<Dialog
+    open={confirmDeleteOpen}
+    onClose={() => setConfirmDeleteOpen(false)}
+>
+    <DialogTitle>Confirmar eliminación</DialogTitle>
+    <DialogContent>
+        <DialogContentText>
             ¿Estás seguro de que quieres eliminar tu cuenta?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCancelDelete} color="primary">
+        </DialogContentText>
+    </DialogContent>
+    <DialogActions>
+        <Button onClick={() => setConfirmDeleteOpen(false)} color="primary">
             Cancelar
-          </Button>
-          <Button onClick={handleConfirmDelete} color="primary">
+        </Button>
+        <Button onClick={handleConfirmDelete} color="primary">
             Eliminar
-          </Button>
-        </DialogActions>
-      </Dialog>
+        </Button>
+    </DialogActions>
+</Dialog>
     </div>
   );
 };

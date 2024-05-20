@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import './App.css';
 import appFirebase from './credenciales';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import Login from './componentes/Login';
 import Home from './componentes/Home';
 import Admins from './componentes/Admins';
-import UserDetails from './componentes/UserDetails';
 import Mensualidades from './componentes/Mensualidades';
-import Verificar from './componentes/Verificar';
+import NavBar from './componentes/NavBar';
+import UserDetails from './componentes/UserDetails';
 
 const auth = getAuth(appFirebase);
 
@@ -26,19 +27,30 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  // Función para renderizar el componente apropiado en función de la URL
-  const renderizarComponente = () => {
-    if (usuario) {
-      return <Home correoUsuario={usuario.email} />;
-    } else {
-      return <Login />;
-    }
+  const handleLogout = async () => {
+    await signOut(auth);
+    setUsuario(null);
   };
 
   return (
-    <div>
-      {renderizarComponente()}
-    </div>
+    <Router>
+      {usuario && window.location.pathname !== '/login' && <NavBar onLogout={handleLogout} />}
+      {usuario && (
+        <Routes>
+          <Route path="/home" element={<Home correoUsuario={usuario.email} />} />
+          <Route path="/mensualidades" element={<Mensualidades />} />
+          <Route path="/admins" element={<Admins />} />
+          <Route path="/user/:userId" element={<UserDetails />} />
+          <Route path="*" element={<Navigate to="/home" />} />
+        </Routes>
+      )}
+      {!usuario && (
+        <Routes>
+          <Route path="/login" element={<Login onLogin={setUsuario} />} />
+          <Route path="*" element={<Navigate to="/login" />} />
+        </Routes>
+      )}
+    </Router>
   );
 }
 

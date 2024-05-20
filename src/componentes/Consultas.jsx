@@ -43,6 +43,15 @@ const Consultas = ({ userId }) => {
     fetchMensualidades();
   }, [userId]); // Solo se ejecuta al cambiar userId
 
+  const formatConsultasDate = (dateString) => {
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const monthIndex = date.getMonth();
+    const year = date.getFullYear();
+    const months = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+    return `${day} ${months[monthIndex]} ${year}`;
+  };
+
   const renderMensualidadesPorAnio = (anio) => {
     const mensualidadesPorAnio = mensualidades.filter(mensualidad => {
       const fechaInicioAnio = new Date(mensualidad.fechaInicio).getFullYear();
@@ -78,8 +87,8 @@ const Consultas = ({ userId }) => {
               <TableBody>
                 {mensualidadesPorAnio.map(mensualidad => (
                   <TableRow key={mensualidad.id}>
-                    <TableCell>{mensualidad.fechaInicio}</TableCell>
-                    <TableCell>{mensualidad.fechaFinalizacion}</TableCell>
+                    <TableCell>{formatConsultasDate(mensualidad.fechaInicio)}</TableCell>
+                    <TableCell>{formatConsultasDate(mensualidad.fechaFinalizacion)}</TableCell>
                     <TableCell>{mensualidad.pago}</TableCell>
                   </TableRow>
                 ))}
@@ -118,8 +127,8 @@ const Consultas = ({ userId }) => {
           </TableHead>
           <TableBody>
             <TableRow>
-              <TableCell>{mensualidadMasAlta ? mensualidadMasAlta.fechaInicio : 'No disponible'}</TableCell>
-              <TableCell>{mensualidadMasAlta ? mensualidadMasAlta.fechaFinalizacion : 'No disponible'}</TableCell>
+              <TableCell>{mensualidadMasAlta ? formatConsultasDate(mensualidadMasAlta.fechaInicio) : 'No disponible'}</TableCell>
+              <TableCell>{mensualidadMasAlta ? formatConsultasDate(mensualidadMasAlta.fechaFinalizacion) : 'No disponible'}</TableCell>
               <TableCell>{mensualidadMasAlta ? mensualidadMasAlta.pago : 'No disponible'}</TableCell>
             </TableRow>
           </TableBody>

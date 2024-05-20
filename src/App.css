@@ -1,49 +1,36 @@
 #root {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0; /* Elimina el padding */
+  padding: 0;
   text-align: center;
 }
 
+#root .btn1 {
+  background-color: #073573;
+  color: white;
+}
+
 .navbar {
-  width: 100%; /* Ajusta la anchura al 100% */
-  padding: 0; /* Elimina el padding */
+  background-color: #123456 !important; /* Asegúrate de que este color sea el que prefieras */
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+.navbar .MuiTypography-root {
+  color: #ffffff !important; /* Cambia este color al que prefieras para el texto del título */
 }
 
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+.navbar .MuiIconButton-root {
+  color: #ffffff !important; /* Cambia este color al que prefieras para el icono del menú */
 }
 
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.navbar .MuiMenu-paper {
+  background-color: #123456 !important; /* Cambia este color al que prefieras para el fondo del menú */
+  color: #ffffff !important; /* Cambia este color al que prefieras para el texto del menú */
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.navbar .MuiMenuItem-root {
+  color: #ffffff !important; /* Cambia este color al que prefieras para el texto de los elementos del menú */
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
+.navbar .MuiMenuItem-root:hover {
+  background-color: #345678 !important; /* Cambia este color al que prefieras para el fondo de los elementos del menú al pasar el mouse */
 }

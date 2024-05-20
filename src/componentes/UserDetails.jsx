@@ -24,9 +24,11 @@ import {
 } from "firebase/firestore";
 import Swal from "sweetalert2";
 import Mensualidades from "./Mensualidades";
-import Home from "./Home"; // Importa el componente Home
+import { useParams } from "react-router-dom";
+import NavBar from "./NavBar";
 
-const UserDetails = ({ userId }) => {
+const UserDetails = () => {
+  const { userId } = useParams();
   const [userData, setUserData] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [updatedUserData, setUpdatedUserData] = useState({
@@ -34,12 +36,11 @@ const UserDetails = ({ userId }) => {
     edad: "",
     Cedula: "",
   });
-  const [showHome, setShowHome] = useState(false); // Estado para controlar la visibilidad del componente Home
-  const [showConfirmationDialog, setShowConfirmationDialog] = useState(false); // Estado para controlar la visibilidad de la ventana emergente de confirmación
-  const [loading, setLoading] = useState(false); // Estado para controlar la animación de carga
-  const [alertOpen, setAlertOpen] = useState(false); // Estado para controlar la visibilidad de la alerta
-  const [alertSeverity, setAlertSeverity] = useState("info"); // Severidad de la alerta
-  const [alertMessage, setAlertMessage] = useState(""); // Mensaje de la alerta
+  const [loading, setLoading] = useState(false);
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertSeverity, setAlertSeverity] = useState("info");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -80,29 +81,29 @@ const UserDetails = ({ userId }) => {
 
   const handleSave = async () => {
     try {
-      setLoading(true); // Activar la animación de carga
-      // Validar campos obligatorios
+      setLoading(true);
       if (Object.values(updatedUserData).some(value => value.trim() === "")) {
-        // Mostrar alerta de campos obligatorios
         setAlertSeverity("info");
         setAlertMessage("Todos los campos son obligatorios.");
         setAlertOpen(true);
-        return; // Detener la función si hay campos vacíos
+        setLoading(false);
+        return;
       }
 
-      // Validar cédula duplicada
       const db = getFirestore();
       const cedulaQuery = query(collection(db, "clientes"), where("Cedula", "==", updatedUserData.Cedula));
       const cedulaSnapshot = await getDocs(cedulaQuery);
       if (!cedulaSnapshot.empty) {
-        // Mostrar alerta de cédula duplicada
-        setAlertSeverity("info");
-        setAlertMessage("Este número de cédula ya está registrado.");
-        setAlertOpen(true);
-        return; // Detener la función si la cédula está duplicada
+        const duplicateUserDoc = cedulaSnapshot.docs[0];
+        if (duplicateUserDoc.id !== userId) {
+          setAlertSeverity("info");
+          setAlertMessage("Este número de cédula ya está registrado.");
+          setAlertOpen(true);
+          setLoading(false);
+          return;
+        }
       }
 
-      // Continuar con la actualización de datos si pasa todas las validaciones
       const userDocRef = doc(db, "clientes", userId);
       await updateDoc(userDocRef, updatedUserData);
       setIsEditing(false);
@@ -115,12 +116,13 @@ const UserDetails = ({ userId }) => {
         timer: 2000,
       }).then((result) => {
         if (result.dismiss === Swal.DismissReason.timer) {
+          setAlertOpen(false);
         }
       });
     } catch (error) {
       console.error("Error al guardar los datos:", error);
     } finally {
-      setLoading(false); // Desactivar la animación de carga después de actualizar los datos
+      setLoading(false);
     }
   };
 
@@ -134,7 +136,7 @@ const UserDetails = ({ userId }) => {
 
   const handleDelete = async () => {
     try {
-      setLoading(true); // Activar la animación de carga
+      setLoading(true);
       const db = getFirestore();
       const mensualidadesQuery = query(collection(db, "mensualidades"), where("clienteId", "==", userId));
       const mensualidadesSnapshot = await getDocs(mensualidadesQuery);
@@ -145,46 +147,46 @@ const UserDetails = ({ userId }) => {
       await batch.commit();
       const userDocRef = doc(db, "clientes", userId);
       await deleteDoc(userDocRef);
-      setShowHome(true); // Mostrar el componente Home después de eliminar el perfil
+      setShowConfirmationDialog(false);
+      Swal.fire({
+        icon: "success",
+        title: "Usuario eliminado",
+        text: "El usuario y sus mensualidades han sido eliminados.",
+        showConfirmButton: false,
+        timer: 2000,
+      });
     } catch (error) {
       console.error("Error al eliminar el usuario:", error);
     } finally {
-      setLoading(false); // Desactivar la animación de carga después de eliminar
+      setLoading(false);
     }
   };
 
-  if (showHome) {
-    return <Home />;
-  }
-
-  if (!userData) {
-    return <p>Cargando datos del usuario...</p>;
-  }
-
   return (
     <div>
+      <NavBar />  {/* Incluye el componente de la navbar aquí */}
+      <hr></hr>
+      
       <Typography variant="h6" gutterBottom>
         ID de Usuario: {userId}
       </Typography>
       <Typography variant="h5" gutterBottom>
-        Nombre: {userData.nombre}
+        Nombre: {userData?.nombre}
       </Typography>
       <Typography variant="body1" gutterBottom>
-        Edad: {userData.edad}
+        Edad: {userData?.edad}
       </Typography>
       <Typography variant="body1" gutterBottom>
-        Cédula: {userData.Cedula}
+        Cédula: {userData?.Cedula}
       </Typography>
-      <Button variant="contained" onClick={handleEdit}>
+      <Button className="btn1" variant="contained" onClick={handleEdit}>
         Editar
       </Button>
-      
+
       <Mensualidades userId={userId} />
       <Dialog open={isEditing} onClose={handleCancelEdit}>
         <DialogTitle>Actualizar Datos</DialogTitle>
-        <hr></hr>
         <DialogContent>
-          {/* Alerta */}
           {alertOpen && (
             <Alert severity={alertSeverity}>
               {alertMessage}
@@ -216,11 +218,14 @@ const UserDetails = ({ userId }) => {
           />
         </DialogContent>
         <DialogActions>
+          <Button variant="outlined" onClick={handleCancelEdit}>
+            Cancelar
+          </Button>
           <Button
             variant="contained"
             onClick={handleSave}
             style={{ marginRight: "8px" }}
-            disabled={loading} // Desactivar el botón mientras se está guardando
+            disabled={loading}
           >
             Guardar
             {loading && (
@@ -237,9 +242,6 @@ const UserDetails = ({ userId }) => {
               />
             )}
           </Button>
-          <Button variant="outlined" onClick={handleCancelEdit}>
-            Cancelar
-          </Button>
         </DialogActions>
       </Dialog>
       <Dialog open={showConfirmationDialog}>
@@ -253,16 +255,8 @@ const UserDetails = ({ userId }) => {
           <Button onClick={handleDeleteCancel} color="primary">
             Cancelar
           </Button>
-          {/* Botón "Eliminar" con animación de carga */}
-          <Button
-            onClick={handleDelete}
-            color="error"
-            disabled={loading} // Desactiva el botón mientras se está eliminando
-            style={{ position: 'relative', overflow: 'hidden', minWidth: '120px' }}
-          >
-            <span style={{ opacity: loading ? 0 : 1 }}>
-              Eliminar
-            </span>
+          <Button onClick={handleDelete} color="secondary" disabled={loading}>
+            Eliminar
             {loading && (
               <CircularProgress
                 size={24}
@@ -279,10 +273,6 @@ const UserDetails = ({ userId }) => {
           </Button>
         </DialogActions>
       </Dialog>
-      <hr></hr>
-      <Button variant="contained" color="error" onClick={handleDeleteConfirmation}>
-        Eliminar Usuario
-      </Button>
     </div>
   );
 };
