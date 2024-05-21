@@ -82,7 +82,7 @@ const Login = () => {
                     <Card style={{ display: showLogin ? 'block' : 'none' }}>
                         <CardContent>
                             <img src={ImageProfile} alt="" style={{ width: '100%', marginBottom: '1rem' }} />
-                            <Button variant="contained" onClick={handleClickOpen}>Ingresar</Button>
+                            <Button className="btn1" variant="contained" onClick={handleClickOpen}>Ingresar</Button>
                         </CardContent>
                     </Card>
                 </Grid>
@@ -92,7 +92,7 @@ const Login = () => {
                 </Grid>
             </Grid>
 
-            <Button variant="contained" onClick={handleVerificar} style={{ display: showLogin ? 'block' : 'none' }}>Verificar</Button>
+            <Button className="btn1" variant="contained" onClick={handleVerificar} style={{ display: showLogin ? 'block' : 'none' }}>Verificar</Button>
 
             {showVerificar && <Verificar onBackToLogin={handleBackToLogin} />}
 

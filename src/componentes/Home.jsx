@@ -292,7 +292,7 @@ const handleConfirmDelete = async () => {
       {showHome && !selectedUser && !isAdmin && (
         <div>
           <Typography variant="body1" align="center" gutterBottom>
-            Bienvenido usuario {correoUsuario}
+            Bienvenido {correoUsuario}
             {!isAdmin && correoUsuario !== "colemangym2@gmail.com" && (
               <IconButton onClick={handleDeleteUser} disabled={isAdmin || correoUsuario === "colemangym2@gmail.com"}>
                 <DeleteIcon sx={{ color: 'red' }} />
