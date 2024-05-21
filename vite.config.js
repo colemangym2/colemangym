@@ -6,7 +6,7 @@ import { onBackgroundMessage } from 'firebase/messaging/sw'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/colemangym/',
+  base: '/',
   plugins: [
     react(),
     VitePWA({

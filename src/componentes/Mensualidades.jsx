@@ -452,7 +452,7 @@ const handleDeleteMensualidad = async (mensualidadId) => {
             style={{ marginRight: "8px" }}
             disabled={loading} // Deshabilitar el botón mientras se carga
           >
-            {loading ? <CircularProgress size={24}  /> : "Guardar"}
+            {loading ? <CircularProgress size={24} color="inherit" /> : "Guardar"}
           </Button>
           
         </DialogActions>
