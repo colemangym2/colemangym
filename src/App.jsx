@@ -45,7 +45,7 @@ function App() {
         </Routes>
       )}
       {!usuario && (
-        <Routes basename="/colemangym">
+        <Routes >
           <Route path="/login" element={<Login onLogin={setUsuario} />} />
           <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
