@@ -10,6 +10,7 @@ import { Table, TableContainer, TableHead, TableBody, TableRow, TableCell, Paper
 import { getFirestore, collection, query, where, getDocs, deleteDoc, doc, addDoc, getDoc, setDoc } from 'firebase/firestore';
 import Swal from 'sweetalert2';
 import { adjustToLocalTime, formatDate } from './DateUtils'; // Importación de dateUtils
+import { useNavigate } from 'react-router-dom'; // Importa useNavigate para redirigir a otra página
 
 const Mensualidades = ({ userId }) => {
   const [mensualidades, setMensualidades] = useState([]);
@@ -32,6 +33,8 @@ const Mensualidades = ({ userId }) => {
   const [showEditButton, setShowEditButton] = useState(true); // Variable para controlar la visibilidad del botón "Editar"
   const [loading, setLoading] = useState(false); // Estado para controlar la animación de carga
 
+  const navigate = useNavigate(); // Definir navigate para redirigir
+  
   useEffect(() => {
     const fetchMensualidades = async () => {
       try {
@@ -260,6 +263,50 @@ const handleDeleteMensualidad = async (mensualidadId) => {
     }
   };
 
+  const handleDeleteUser = async () => {
+    const confirmation = await Swal.fire({
+      icon: 'warning',
+      title: '¿Estás seguro?',
+      text: 'Esta acción eliminará al usuario y su historial de mensualidades. ¿Estás seguro de que quieres continuar?',
+      showCancelButton: true,
+      cancelButtonColor: '#3085d6',
+      confirmButtonColor: '#d33',
+      cancelButtonText: 'Cancelar',
+      confirmButtonText: 'Sí, eliminar',
+      reverseButtons: true,
+    });
+
+    if (confirmation.isConfirmed) {
+      try {
+        const db = getFirestore();
+        await deleteDoc(doc(db, 'clientes', userId));
+
+        await Promise.all(mensualidades.map(async (mensualidad) => {
+          await deleteDoc(doc(db, 'mensualidades', mensualidad.id));
+        }));
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Usuario eliminado',
+          text: 'El usuario y su historial de mensualidades han sido eliminados correctamente.',
+          timer: 2000,
+          timerProgressBar: true,
+          showConfirmButton: false
+        });
+
+        navigate('/'); // Ahora navigate está definido en el ámbito del componente
+      } catch (error) {
+        console.error('Error al eliminar usuario:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Hubo un error al intentar eliminar al usuario. Por favor, inténtalo de nuevo más tarde.'
+        });
+      }
+    }
+  };
+
+  
 
   const renderMensualidadesPorAnio = (anio, isLast) => {
     const mensualidadesPorAnio = mensualidades.filter(mensualidad => {
@@ -274,6 +321,7 @@ const handleDeleteMensualidad = async (mensualidadId) => {
       return null;
     }
 
+    
     return (
       <Accordion key={anio}>
         <AccordionSummary
@@ -513,7 +561,16 @@ const handleDeleteMensualidad = async (mensualidadId) => {
           </Button>
           
         </DialogActions>
+        
       </Dialog>
+      <Button
+  variant="contained"
+  color="error"
+  onClick={handleDeleteUser}
+  style={{ marginBottom: "16px" }}
+>
+  Eliminar Usuario
+</Button>
     </div>
   );
 };
