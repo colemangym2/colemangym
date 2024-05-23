@@ -48,6 +48,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useNavigate } from "react-router-dom"; // Importa useNavigate
+import { adjustToLocalTime, formatDate } from './DateUtils';
 
 const auth = getAuth(appFirebase);
 const db = getFirestore(appFirebase);
@@ -259,32 +260,7 @@ const handleConfirmDelete = async () => {
     setShowHome(true);
     actualizarTablaUsuarios();
   };
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    
-    // Ajustar la fecha a la zona horaria local
-    const localDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
   
-    const day = localDate.getDate(); // Obtener el día del mes
-    const monthIndex = localDate.getMonth(); // Obtener el índice del mes
-    const year = localDate.getFullYear(); // Obtener el año
-  
-    // Array de nombres de los meses en español
-    const months = [
-      "ene", "feb", "mar", "abr", "may", "jun",
-      "jul", "ago", "sep", "oct", "nov", "dic"
-    ];
-  
-    // Formato deseado: [día] [nombre abreviado del mes] [año]
-    const formattedDate = `${day} ${months[monthIndex]} ${year}`;
-    return formattedDate;
-  };
-  
-  
-  
-  
-
   return (
     <div style={{ marginTop: '67px' }}>
       <NavBar correoUsuario={correoUsuario} />

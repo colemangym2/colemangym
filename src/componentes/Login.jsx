@@ -92,7 +92,7 @@ const Login = () => {
                 </Grid>
             </Grid>
 
-            <Button className="btn1" variant="contained" onClick={handleVerificar} style={{ display: showLogin ? 'block' : 'none' }}>Verificar</Button>
+            <Button className="btn1" variant="contained" onClick={handleVerificar} style={{ display: showLogin ? 'block' : 'none' }}>Verifica</Button>
 
             {showVerificar && <Verificar onBackToLogin={handleBackToLogin} />}
 

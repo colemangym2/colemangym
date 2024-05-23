@@ -9,6 +9,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { Table, TableContainer, TableHead, TableBody, TableRow, TableCell, Paper, Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Alert, IconButton, CircularProgress } from '@mui/material';
 import { getFirestore, collection, query, where, getDocs, deleteDoc, doc, addDoc, getDoc, setDoc } from 'firebase/firestore';
 import Swal from 'sweetalert2';
+import { adjustToLocalTime, formatDate } from './DateUtils'; // Importación de dateUtils
 
 const Mensualidades = ({ userId }) => {
   const [mensualidades, setMensualidades] = useState([]);
@@ -55,14 +56,7 @@ const Mensualidades = ({ userId }) => {
     fetchMensualidades();
   }, [userId, forceUpdate]); // Añadir forceUpdate a la lista de dependencias
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const day = date.getDate();
-    const monthIndex = date.getMonth();
-    const year = date.getFullYear();
-    const months = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-    return `${day} ${months[monthIndex]} ${year}`;
-  };
+
 
 const handleDeleteMensualidad = async (mensualidadId) => {
   const confirmation = await Swal.fire({

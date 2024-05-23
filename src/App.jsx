@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import './App.css';
 import appFirebase from './credenciales';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
@@ -53,4 +53,5 @@ function App() {
     </Router>
   );
 }
+
 export default App;

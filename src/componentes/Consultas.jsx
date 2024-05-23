@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
+import { adjustToLocalTime, formatDate } from './DateUtils';
 
 const Consultas = ({ userId }) => {
   const [mensualidades, setMensualidades] = useState([]);
@@ -43,14 +44,7 @@ const Consultas = ({ userId }) => {
     fetchMensualidades();
   }, [userId]); // Solo se ejecuta al cambiar userId
 
-  const formatConsultasDate = (dateString) => {
-    const date = new Date(dateString);
-    const day = date.getDate();
-    const monthIndex = date.getMonth();
-    const year = date.getFullYear();
-    const months = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-    return `${day} ${months[monthIndex]} ${year}`;
-  };
+
 
   const renderMensualidadesPorAnio = (anio) => {
     const mensualidadesPorAnio = mensualidades.filter(mensualidad => {
@@ -87,8 +81,8 @@ const Consultas = ({ userId }) => {
               <TableBody>
                 {mensualidadesPorAnio.map(mensualidad => (
                   <TableRow key={mensualidad.id}>
-                    <TableCell>{formatConsultasDate(mensualidad.fechaInicio)}</TableCell>
-                    <TableCell>{formatConsultasDate(mensualidad.fechaFinalizacion)}</TableCell>
+                    <TableCell>{formatDate(mensualidad.fechaInicio)}</TableCell>
+                    <TableCell>{formatDate(mensualidad.fechaFinalizacion)}</TableCell>
                     <TableCell>{mensualidad.pago}</TableCell>
                   </TableRow>
                 ))}
@@ -127,8 +121,8 @@ const Consultas = ({ userId }) => {
           </TableHead>
           <TableBody>
             <TableRow>
-              <TableCell>{mensualidadMasAlta ? formatConsultasDate(mensualidadMasAlta.fechaInicio) : 'No disponible'}</TableCell>
-              <TableCell>{mensualidadMasAlta ? formatConsultasDate(mensualidadMasAlta.fechaFinalizacion) : 'No disponible'}</TableCell>
+              <TableCell>{mensualidadMasAlta ? formatDate(mensualidadMasAlta.fechaInicio) : 'No disponible'}</TableCell>
+              <TableCell>{mensualidadMasAlta ? formatDate(mensualidadMasAlta.fechaFinalizacion) : 'No disponible'}</TableCell>
               <TableCell>{mensualidadMasAlta ? mensualidadMasAlta.pago : 'No disponible'}</TableCell>
             </TableRow>
           </TableBody>

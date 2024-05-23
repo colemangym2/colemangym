@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "homepage": "https://colemangym2.github.io/colemangym/",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -14,7 +15,6 @@
   "dependencies": {
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.0",
-    "@formkit/tempo": "^0.1.1",
     "@mui/icons-material": "^5.15.14",
     "@mui/material": "^5.15.14",
     "date-fns": "^3.6.0",
