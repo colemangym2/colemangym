@@ -217,20 +217,22 @@ const Home = ({ correoUsuario }) => {
   
   const handleDeleteUser = async () => {
     setConfirmDeleteOpen(true);
-};
+  };
 
-const handleConfirmDelete = async () => {
+  const handleConfirmDelete = async () => {
     setConfirmDeleteOpen(false);
   
     try {
-      // Eliminar el documento correspondiente en la colección 'users'
+      // Buscar el documento del usuario en la colección 'users'
       const userQuery = query(collection(db, "users"), where("email", "==", correoUsuario));
       const userSnapshot = await getDocs(userQuery);
   
-      userSnapshot.forEach(async (doc) => {
-        await deleteDoc(doc.ref);
-        console.log("Documento de usuario eliminado:", doc.id);
-      });
+      if (!userSnapshot.empty) {
+        // Eliminar el documento del usuario encontrado
+        const userDoc = userSnapshot.docs[0];
+        await deleteDoc(userDoc.ref);
+        console.log("Documento de usuario eliminado:", userDoc.id);
+      }
   
       // Eliminar el usuario de la autenticación
       const user = auth.currentUser;
@@ -244,14 +246,10 @@ const handleConfirmDelete = async () => {
     } catch (error) {
       console.error("Error al eliminar usuario:", error);
     }
-};
+  };
   
-  
-  
-
   const handleCancelDelete = () => {
     setConfirmDeleteOpen(false);
- 
   };
 
   const handleReturnHome = () => {
@@ -412,19 +410,18 @@ const handleConfirmDelete = async () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-  {lista.map((user) => (
-    <TableRow
-      key={user.id}
-      style={{ backgroundColor: getColorByEstado(user) }}
-      onClick={() => handleUserClick(user.id)} // Llama a handleUserClick con el ID del usuario
-    >
-      <TableCell>{user.nombre}</TableCell>
-      <TableCell>{formatDate(user.fechaFinalizacion)}</TableCell>
-      <TableCell>{user.pago}</TableCell>
-    </TableRow>
-  ))}
-</TableBody>
-
+                {lista.map((user) => (
+                  <TableRow
+                    key={user.id}
+                    style={{ backgroundColor: getColorByEstado(user) }}
+                    onClick={() => handleUserClick(user.id)} // Llama a handleUserClick con el ID del usuario
+                  >
+                    <TableCell>{user.nombre}</TableCell>
+                    <TableCell>{formatDate(user.fechaFinalizacion)}</TableCell>
+                    <TableCell>{user.pago}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
             </Table>
           </Container>
         </div>
@@ -440,25 +437,25 @@ const handleConfirmDelete = async () => {
         />
       )}
 
-<Dialog
-    open={confirmDeleteOpen}
-    onClose={() => setConfirmDeleteOpen(false)}
->
-    <DialogTitle>Confirmar eliminación</DialogTitle>
-    <DialogContent>
-        <DialogContentText>
+      <Dialog
+        open={confirmDeleteOpen}
+        onClose={() => setConfirmDeleteOpen(false)}
+      >
+        <DialogTitle>Confirmar eliminación</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
             ¿Estás seguro de que quieres eliminar tu cuenta?
-        </DialogContentText>
-    </DialogContent>
-    <DialogActions>
-        <Button onClick={() => setConfirmDeleteOpen(false)} color="primary">
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmDeleteOpen(false)} color="primary">
             Cancelar
-        </Button>
-        <Button onClick={handleConfirmDelete} color="primary">
+          </Button>
+          <Button onClick={handleConfirmDelete} color="primary">
             Eliminar
-        </Button>
-    </DialogActions>
-</Dialog>
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
