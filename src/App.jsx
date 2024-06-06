@@ -40,7 +40,7 @@ function App() {
           <Route path="/home" element={<Home correoUsuario={usuario.email} />} />
           <Route path="/mensualidades" element={<Mensualidades />} />
           <Route path="/admins" element={<Admins />} />
-          <Route path="/user/:userId" element={<UserDetails />} />
+          <Route path="/user/:userId/:correoUsuario" element={<UserDetails />} />
           <Route path="*" element={<Navigate to="/home" />} />
         </Routes>
       )}

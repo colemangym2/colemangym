@@ -28,7 +28,7 @@ import { useParams } from "react-router-dom";
 import NavBar from "./NavBar";
 
 const UserDetails = () => {
-  const { userId } = useParams();
+  const { userId, correoUsuario } = useParams();
   const [userData, setUserData] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [updatedUserData, setUpdatedUserData] = useState({
@@ -166,7 +166,10 @@ const UserDetails = () => {
     <div>
       <NavBar />  {/* Incluye el componente de la navbar aquí */}
       <hr></hr>
-      
+
+      <Typography variant="h6" gutterBottom>
+        Bienvenido: {correoUsuario}
+      </Typography>
       <Typography variant="h6" gutterBottom>
         ID de Usuario: {userId}
       </Typography>
@@ -183,7 +186,8 @@ const UserDetails = () => {
         Editar
       </Button>
 
-      <Mensualidades userId={userId} />
+      <Mensualidades userId={userId} correoUsuario={correoUsuario} />
+
       <Dialog open={isEditing} onClose={handleCancelEdit}>
         <DialogTitle>Actualizar Datos</DialogTitle>
         <DialogContent>
@@ -212,7 +216,8 @@ const UserDetails = () => {
             label="Cédula"
             name="Cedula"
             value={updatedUserData.Cedula}
-            fullWidth
+           
+          fullWidth
             onChange={handleChange}
             style={{ marginBottom: "16px" }}
           />

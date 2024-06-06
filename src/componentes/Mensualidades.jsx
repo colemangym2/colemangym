@@ -12,7 +12,7 @@ import Swal from 'sweetalert2';
 import { adjustToLocalTime, formatDate } from './DateUtils'; // Importación de dateUtils
 import { useNavigate } from 'react-router-dom'; // Importa useNavigate para redirigir a otra página
 
-const Mensualidades = ({ userId }) => {
+const Mensualidades = ({ userId, correoUsuario }) => {
   const [mensualidades, setMensualidades] = useState([]);
   const [mensualidadMasAlta, setMensualidadMasAlta] = useState(null);
   const [isNewMensualidadOpen, setIsNewMensualidadOpen] = useState(false);
@@ -141,61 +141,66 @@ const handleDeleteMensualidad = async (mensualidadId) => {
   };
 
   const handleNewMensualidadSave = async () => {
-    // Check if any field is empty
     if (!newMensualidadData.fechaInicio || !newMensualidadData.fechaFinalizacion || !newMensualidadData.pago) {
       setFormError(true);
       return;
     }
-
-    setLoading(true); // Activar animación de carga
-
+  
+    setLoading(true);
+  
     try {
       const db = getFirestore();
+  
+      // Buscar el correo electrónico en la colección 'users'
+      const usersCollectionRef = collection(db, 'users');
+      const q = query(usersCollectionRef, where("email", "==", correoUsuario));
+      const querySnapshot = await getDocs(q);
+      let username;
+  
+      querySnapshot.forEach((doc) => {
+        // doc.data() is never undefined for query doc snapshots
+        username = doc.data().username;
+      });
+  
+      // Guardar la nueva mensualidad con el username obtenido
       const mensualidadesCollectionRef = collection(db, "mensualidades");
-      const newMensualidadDocRef = await addDoc(mensualidadesCollectionRef, {
+      await addDoc(mensualidadesCollectionRef, {
         clienteId: userId,
         fechaInicio: newMensualidadData.fechaInicio,
         fechaFinalizacion: newMensualidadData.fechaFinalizacion,
         pago: newMensualidadData.pago,
+        admin: username, // Agregar el username del usuario
       });
-
-      // Obtener datos del cliente
-      const clienteDocRef = doc(db, 'clientes', userId);
-      const clienteDocSnapshot = await getDoc(clienteDocRef);
-      const clienteData = clienteDocSnapshot.data();
-
-      // Calcular nueva fechaFinalizacion y pago
-      const nuevaFechaFinalizacion = newMensualidadData.fechaFinalizacion;
-      const nuevoPago = newMensualidadData.pago;
-
-      // Actualizar datos del cliente
-      await setDoc(clienteDocRef, {
-        ...clienteData,
-        fechaFinalizacion: nuevaFechaFinalizacion,
-        pago: nuevoPago,
+  
+      // Resetear los datos del formulario a los valores iniciales
+      setNewMensualidadData({
+        fechaInicio: "",
+        fechaFinalizacion: "",
+        pago: "",
       });
-
+  
+      // Cerrar la ventana flotante
       setIsNewMensualidadOpen(false);
-
+  
+      // Mostrar notificación de éxito
       Swal.fire({
         icon: "success",
-        title: "Nueva mensualidad agregada",
-        text: "La nueva mensualidad ha sido agregada correctamente.",
+        title: "Mensualidad guardada",
+        text: "La mensualidad ha sido guardada correctamente.",
         showConfirmButton: false,
         timer: 2000,
-      }).then((result) => {
-        if (result.dismiss === Swal.DismissReason.timer) {
-        }
       });
-
-      setForceUpdate(prev => !prev); // Forzar la actualización de la interfaz de usuario
-
+  
+      // Forzar la actualización de la interfaz de usuario
+      setForceUpdate(prev => !prev);
+  
     } catch (error) {
       console.error("Error al guardar la nueva mensualidad:", error);
     } finally {
-      setLoading(false); // Desactivar animación de carga
+      setLoading(false);
     }
   };
+  
 
 
   const handleEditMensualidadSave = async () => {
@@ -313,15 +318,14 @@ const handleDeleteMensualidad = async (mensualidadId) => {
       const fechaInicioAnio = new Date(mensualidad.fechaInicio).getFullYear();
       return fechaInicioAnio === anio;
     });
-
+  
     // Ordenar las mensualidades por fecha de finalización de forma descendente
     mensualidadesPorAnio.sort((a, b) => new Date(b.fechaFinalizacion) - new Date(a.fechaFinalizacion));
-
+  
     if (mensualidadesPorAnio.length === 0) {
       return null;
     }
-
-    
+  
     return (
       <Accordion key={anio}>
         <AccordionSummary
@@ -339,6 +343,7 @@ const handleDeleteMensualidad = async (mensualidadId) => {
                   <TableCell>Fecha de Inicio</TableCell>
                   <TableCell>Fecha de Finalización</TableCell>
                   <TableCell>Pago</TableCell>
+                  <TableCell>Admin</TableCell> {/* Nueva celda para mostrar el campo "admin" */}
                   <TableCell>Acciones</TableCell>
                 </TableRow>
               </TableHead>
@@ -346,9 +351,9 @@ const handleDeleteMensualidad = async (mensualidadId) => {
                 {mensualidadesPorAnio.map(mensualidad => (
                   <TableRow key={mensualidad.id}>
                     <TableCell>{formatDate(mensualidad.fechaInicio)}</TableCell>
-<TableCell>{formatDate(mensualidad.fechaFinalizacion)}</TableCell>
-
+                    <TableCell>{formatDate(mensualidad.fechaFinalizacion)}</TableCell>
                     <TableCell>{mensualidad.pago}</TableCell>
+                    <TableCell>{mensualidad.admin}</TableCell> {/* Mostrar el campo "admin" */}
                     <TableCell>
                       {mensualidadMasAlta && mensualidadMasAlta.id === mensualidad.id ? (
                         <IconButton
@@ -375,6 +380,7 @@ const handleDeleteMensualidad = async (mensualidadId) => {
       </Accordion>
     );
   };
+  
 
   const obtenerAniosUnicos = () => {
     const aniosUnicos = [];

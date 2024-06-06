@@ -101,60 +101,76 @@ const Home = ({ correoUsuario }) => {
     const nuevosErrores = { ...errors };
 
     Object.entries(user).forEach(([key, value]) => {
-      if (value.trim() === "") {
-        nuevosErrores[key] = true;
-        hayErrores = true;
-      }
+        if (value.trim() === "") {
+            nuevosErrores[key] = true;
+            hayErrores = true;
+        }
     });
 
     setErrors(nuevosErrores);
 
     if (hayErrores) {
-      setLoading(false);
-      return;
+        setLoading(false);
+        return;
     }
 
     try {
-      const cedulaQuery = query(collection(db, "clientes"), where("Cedula", "==", user.Cedula));
-      const cedulaSnapshot = await getDocs(cedulaQuery);
+        const cedulaQuery = query(collection(db, "clientes"), where("Cedula", "==", user.Cedula));
+        const cedulaSnapshot = await getDocs(cedulaQuery);
 
-      if (!cedulaSnapshot.empty) {
-        setCedulaError(true);
-        setLoading(false);
-        return;
-      }
+        if (!cedulaSnapshot.empty) {
+            setCedulaError(true);
+            setLoading(false);
+            return;
+        }
 
-      const clienteRef = await addDoc(collection(db, "clientes"), {
-        nombre: user.nombre,
-        edad: user.edad,
-        Cedula: user.Cedula,
-        fechaFinalizacion: user.fechaFinalizacion,
-        pago: parseFloat(user.pago),
-      });
+        // Obtener el correo electrónico del usuario actual
+        const correoUsuario = auth.currentUser.email;
 
-      await addDoc(collection(db, "mensualidades"), {
-        clienteId: clienteRef.id,
-        fechaInicio: user.fechaInicio,
-        fechaFinalizacion: user.fechaFinalizacion,
-        pago: parseFloat(user.pago),
-      });
+        // Buscar el documento del usuario en la colección 'users'
+        const userQuery = query(collection(db, "users"), where("email", "==", correoUsuario));
+        const userSnapshot = await getDocs(userQuery);
 
-      setUser({
-        nombre: "",
-        edad: "",
-        Cedula: "",
-        fechaInicio: "",
-        fechaFinalizacion: "",
-        pago: "",
-      });
-      await actualizarTablaUsuarios();
-      setOpen(false);
+        let userName = "";
+        if (!userSnapshot.empty) {
+            // Obtener el nombre de usuario del primer documento encontrado
+            userName = userSnapshot.docs[0].data().username;
+        }
+
+        const clienteRef = await addDoc(collection(db, "clientes"), {
+            nombre: user.nombre,
+            edad: user.edad,
+            Cedula: user.Cedula,
+            fechaFinalizacion: user.fechaFinalizacion,
+            pago: parseFloat(user.pago),
+        });
+
+        await addDoc(collection(db, "mensualidades"), {
+            clienteId: clienteRef.id,
+            fechaInicio: user.fechaInicio,
+            fechaFinalizacion: user.fechaFinalizacion,
+            pago: parseFloat(user.pago),
+            // Incluir el nombre de usuario en la entrada de mensualidad
+            admin: userName,
+        });
+
+        setUser({
+            nombre: "",
+            edad: "",
+            Cedula: "",
+            fechaInicio: "",
+            fechaFinalizacion: "",
+            pago: "",
+        });
+        await actualizarTablaUsuarios();
+        setOpen(false);
     } catch (error) {
-      console.log(error);
+        console.log(error);
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+};
+
 
   const actualizarTablaUsuarios = async () => {
     try {
@@ -198,21 +214,43 @@ const Home = ({ correoUsuario }) => {
     }
   };
 
-  const getColorByEstado = (user) => {
+  const getColorByEstado = (user, costoMensualidad) => {
     const fechaFinalizacion = new Date(user.fechaFinalizacion);
     const fechaActual = new Date();
-
+    
     if (fechaFinalizacion < fechaActual) {
-      return '#EC543C';
+      return '#EC543C'; // Rojo si la fecha de finalización ha pasado
     } else if (user.pago < costoMensualidad) {
-      return '#ECE43C';
+      return '#ECE43C'; // Amarillo si el pago es menor que el costo de la mensualidad
     } else {
-      return 'white';
+      return 'white'; // Blanco en cualquier otro caso
     }
-  };
+  };  
+  
+
+  useEffect(() => {
+    const updatedLista = lista.map((user) => ({
+      ...user,
+      color: getColorByEstado(user, costoMensualidad)
+    }));
+  
+    if (!areArraysEqual(lista, updatedLista)) {
+      setLista(updatedLista);
+    }
+  }, [lista, costoMensualidad]);
+  
+  
+  // Función de utilidad para comparar dos arreglos de objetos
+  function areArraysEqual(arr1, arr2) {
+    if (arr1.length !== arr2.length) return false;
+    return arr1.every((item, index) => {
+      return item.color === arr2[index].color;
+    });
+  }
+  
 
   const handleUserClick = (userId) => {
-    navigate(`/user/${userId}`); // Navega al componente UserDetails con el userId
+    navigate(`/user/${userId}/${correoUsuario}`); // Navega al componente UserDetails con el userId
   };
   
   const handleDeleteUser = async () => {
@@ -410,18 +448,19 @@ const Home = ({ correoUsuario }) => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {lista.map((user) => (
-                  <TableRow
-                    key={user.id}
-                    style={{ backgroundColor: getColorByEstado(user) }}
-                    onClick={() => handleUserClick(user.id)} // Llama a handleUserClick con el ID del usuario
-                  >
-                    <TableCell>{user.nombre}</TableCell>
-                    <TableCell>{formatDate(user.fechaFinalizacion)}</TableCell>
-                    <TableCell>{user.pago}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
+  {lista.map((user) => (
+    <TableRow
+      key={user.id}
+      style={{ backgroundColor: getColorByEstado(user, costoMensualidad) }} // Modificado
+      onClick={() => handleUserClick(user.id)} // Llama a handleUserClick con el ID del usuario
+    >
+      <TableCell>{user.nombre}</TableCell>
+      <TableCell>{formatDate(user.fechaFinalizacion)}</TableCell>
+      <TableCell>{user.pago}</TableCell>
+    </TableRow>
+  ))}
+</TableBody>
+
             </Table>
           </Container>
         </div>
