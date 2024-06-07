@@ -2,6 +2,9 @@ import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import react from '@vitejs/plugin-react';
 
+// Definir la versión de la PWA
+const version = '1.0.0';
+
 export default defineConfig({
   base: '/colemangym/' , // Usar base solo en producción
   plugins: [
@@ -43,6 +46,13 @@ export default defineConfig({
             purpose: 'maskable',
           },
         ],
+        // Agregar la versión personalizada
+        version: version,
+      },
+       // Configuración de Workbox para la estrategia de caché
+       workbox: {
+        // Utiliza la estrategia "Cache then Network"
+        strategies: 'cacheFirst',
       },
     }),
   ],
