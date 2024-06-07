@@ -164,14 +164,20 @@ const handleDeleteMensualidad = async (mensualidadId) => {
   
       // Guardar la nueva mensualidad con el username obtenido
       const mensualidadesCollectionRef = collection(db, "mensualidades");
-      await addDoc(mensualidadesCollectionRef, {
+      const mensualidadDocRef = await addDoc(mensualidadesCollectionRef, {
         clienteId: userId,
         fechaInicio: newMensualidadData.fechaInicio,
         fechaFinalizacion: newMensualidadData.fechaFinalizacion,
         pago: newMensualidadData.pago,
         admin: username, // Agregar el username del usuario
       });
-  
+      
+      // Actualizar la fecha de finalización en la colección clientes
+      const clienteDocRef = doc(db, 'clientes', userId);
+      await setDoc(clienteDocRef, {
+        fechaFinalizacion: newMensualidadData.fechaFinalizacion,
+      }, { merge: true });
+
       // Resetear los datos del formulario a los valores iniciales
       setNewMensualidadData({
         fechaInicio: "",
@@ -199,8 +205,8 @@ const handleDeleteMensualidad = async (mensualidadId) => {
     } finally {
       setLoading(false);
     }
-  };
-  
+};
+
 
 
   const handleEditMensualidadSave = async () => {
@@ -381,6 +387,7 @@ const handleDeleteMensualidad = async (mensualidadId) => {
     );
   };
   
+
 
   const obtenerAniosUnicos = () => {
     const aniosUnicos = [];
