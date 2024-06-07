@@ -49,11 +49,8 @@ export default defineConfig({
         // Agregar la versión personalizada
         version: version,
       },
-       // Configuración de Workbox para la estrategia de caché
-       workbox: {
-        // Utiliza la estrategia "Cache then Network"
-        strategies: 'cacheFirst',
-      },
+        // Configuración de Workbox sin la opción 'strategies'
+      workbox: {},
     }),
   ],
 });

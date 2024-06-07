@@ -348,7 +348,7 @@ const handleDeleteMensualidad = async (mensualidadId) => {
                 <TableRow>
                   <TableCell>Fecha de Inicio</TableCell>
                   <TableCell>Fecha de Finalización</TableCell>
-                  <TableCell>Pago</TableCell>
+                  <TableCell>Pagó</TableCell>
                   <TableCell>Admin</TableCell> {/* Nueva celda para mostrar el campo "admin" */}
                   <TableCell>Acciones</TableCell>
                 </TableRow>

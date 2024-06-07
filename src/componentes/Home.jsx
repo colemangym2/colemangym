@@ -304,7 +304,7 @@ const Home = ({ correoUsuario }) => {
       {showHome && !selectedUser && !isAdmin && (
         <div>
           <Typography variant="body1" align="center" gutterBottom>
-            Bienvenido {correoUsuario}
+            BIENVENIDO  {correoUsuario}
             {!isAdmin && correoUsuario !== "colemangym2@gmail.com" && (
               <IconButton onClick={handleDeleteUser} disabled={isAdmin || correoUsuario === "colemangym2@gmail.com"}>
                 <DeleteIcon sx={{ color: 'red' }} />
