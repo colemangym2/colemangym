@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import appFirebase from "../credenciales";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { getFirestore, collection, addDoc, serverTimestamp, getDocs } from "firebase/firestore";
-import Swal from 'sweetalert2';
 import { Button, Card, CardContent, Container, Grid, TextField, InputAdornment, Paper, TableContainer, Table, TableHead, TableBody, TableRow, TableCell, CircularProgress, IconButton } from '@mui/material';
 import Typography from '@mui/material/Typography';
+import Alert from '@mui/material/Alert';
 import Home from './Home';
-import NavBar from './NavBar';  // Importa el componente NavBar
+import NavBar from './NavBar';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 
@@ -24,6 +24,7 @@ const Admins = () => {
     const [redirectHome, setRedirectHome] = useState(false);
     const [homeKey, setHomeKey] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
 
     useEffect(() => {
         fetchUsers();
@@ -66,12 +67,14 @@ const Admins = () => {
     };
 
     const handleRegister = async () => {
+        setErrorMessage('');
+        if (!email || !password || !confirmPassword || !username) {
+            setErrorMessage('Por favor, llene todos los campos');
+            return;
+        }
+
         if (password !== confirmPassword) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Las contraseñas no coinciden',
-            });
+            setErrorMessage('Las contraseñas no coinciden');
             return;
         }
 
@@ -81,28 +84,18 @@ const Admins = () => {
             await addDoc(collection(db, "users"), {
                 email: email,
                 password: password,
-                username: username, // Nuevo campo para el nombre de usuario
+                username: username,
                 registrationDate: serverTimestamp()
             });
 
-            Swal.fire({
-                icon: 'success',
-                title: 'Registro exitoso',
-                showConfirmButton: false,
-                timer: 1500,
-            });
             setEmail('');
             setPassword('');
             setConfirmPassword('');
-            setUsername(''); // Limpiar el campo de nombre de usuario
+            setUsername('');
             fetchUsers();
             setRedirectHome(true);
         } catch (error) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error de registro',
-                text: 'Hubo un problema al registrar el usuario. Por favor, inténtelo de nuevo más tarde.',
-            });
+            setErrorMessage('Hubo un problema al registrar el usuario. Por favor, inténtelo de nuevo más tarde.');
         } finally {
             setLoading(false);
         }
@@ -132,74 +125,79 @@ const Admins = () => {
                             Bienvenido usuario {auth.currentUser.email}
                         </Typography>
                         <Grid container spacing={2}>
-    <Grid item md={4}>
-        <Card>
-            <CardContent>
-                <TextField
-                    autoFocus
-                    margin="dense"
-                    label="Nombre de usuario"
-                    fullWidth
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                />
-                <TextField
-                    margin="dense"
-                    label="Correo electrónico"
-                    type="email"
-                    fullWidth
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                />
-                <TextField
-                    margin="dense"
-                    label="Contraseña"
-                    type={showPassword ? "text" : "password"}
-                    fullWidth
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    InputProps={{
-                        endAdornment: (
-                            <InputAdornment position="end">
-                                <IconButton
-                                    aria-label="toggle password visibility"
-                                    onClick={handleTogglePasswordVisibility}
-                                    edge="end"
-                                >
-                                    {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                                </IconButton>
-                            </InputAdornment>
-                        ),
-                    }}
-                />
-                <TextField
-                    margin="dense"
-                    label="Confirmar contraseña"
-                    type={showConfirmPassword ? "text" : "password"}
-                    fullWidth
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    InputProps={{
-                        endAdornment: (
-                            <InputAdornment position="end">
-                                <IconButton
-                                    aria-label="toggle confirm password visibility"
-                                    onClick={handleToggleConfirmPasswordVisibility}
-                                    edge="end"
-                                >
-                                    {showConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                                </IconButton>
-                            </InputAdornment>
-                        ),
-                    }}
-                />
-                <Button className="btn1" onClick={handleRegister} variant="contained" disabled={loading}>
-                    Registrar
-                    {loading && <CircularProgress size={24} style={{ marginLeft: '8px' }} />}
-                </Button>
-            </CardContent>
-        </Card>
-    </Grid>
+                            <Grid item md={4}>
+                                <Card>
+                                    <CardContent>
+                                        <TextField
+                                            autoFocus
+                                            margin="dense"
+                                            label="Nombre de usuario"
+                                            fullWidth
+                                            value={username}
+                                            onChange={(e) => setUsername(e.target.value)}
+                                        />
+                                        <TextField
+                                            margin="dense"
+                                            label="Correo electrónico"
+                                            type="email"
+                                            fullWidth
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                        />
+                                        <TextField
+                                            margin="dense"
+                                            label="Contraseña"
+                                            type={showPassword ? "text" : "password"}
+                                            fullWidth
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            InputProps={{
+                                                endAdornment: (
+                                                    <InputAdornment position="end">
+                                                        <IconButton
+                                                            aria-label="toggle password visibility"
+                                                            onClick={handleTogglePasswordVisibility}
+                                                            edge="end"
+                                                        >
+                                                            {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                                                        </IconButton>
+                                                    </InputAdornment>
+                                                ),
+                                            }}
+                                        />
+                                        <TextField
+                                            margin="dense"
+                                            label="Confirmar contraseña"
+                                            type={showConfirmPassword ? "text" : "password"}
+                                            fullWidth
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            InputProps={{
+                                                endAdornment: (
+                                                    <InputAdornment position="end">
+                                                        <IconButton
+                                                            aria-label="toggle confirm password visibility"
+                                                            onClick={handleToggleConfirmPasswordVisibility}
+                                                            edge="end"
+                                                        >
+                                                            {showConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                                                        </IconButton>
+                                                    </InputAdornment>
+                                                ),
+                                            }}
+                                        />
+                                        {errorMessage && (
+                                            <Alert severity="error" style={{ marginTop: '10px' }}>
+                                                {errorMessage}
+                                            </Alert>
+                                        )}
+                                        <Button className="btn1" onClick={handleRegister} variant="contained" disabled={loading} style={{ marginTop: '10px' }}>
+                                            Registrar
+                                            {loading && <CircularProgress size={24} style={{ marginLeft: '8px' }} />}
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
                             <Grid item md={8}>
                                 {loading ? (
                                     <CircularProgress />
@@ -217,24 +215,23 @@ const Admins = () => {
                                             <TableBody>
                                                 {users.map((user) => (
                                                     <TableRow key={user.id}>
-                                                    <TableCell>{user.email}</TableCell>
-                                                    <TableCell>{user.password}</TableCell>
-                                                    <TableCell>{user.username}</TableCell>
-                                                    <TableCell>{user.registrationDate}</TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </TableContainer>
-                            )}
+                                                        <TableCell>{user.email}</TableCell>
+                                                        <TableCell>{user.password}</TableCell>
+                                                        <TableCell>{user.username}</TableCell>
+                                                        <TableCell>{user.registrationDate}</TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
+                                )}
+                            </Grid>
                         </Grid>
-                    </Grid>
-                </>
-            )}
-        </Container>
-    </div>
-);
+                    </>
+                )}
+            </Container>
+        </div>
+    );
 };
 
 export default Admins;
-
