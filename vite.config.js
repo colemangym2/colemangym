@@ -3,7 +3,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import react from '@vitejs/plugin-react';
 
 // Definir la versión de la PWA
-const version = '1.0.0';
+const version = '1.1.0';
 
 export default defineConfig({
   base: '/colemangym/' , // Usar base solo en producción
