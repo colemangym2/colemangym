@@ -2,13 +2,16 @@ import React, { useEffect, useState } from "react";
 import {
   Typography,
   Button,
-  TextField,
+  Card,
+  CardContent,
+  Grid,
+  CircularProgress,
+  Alert,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  CircularProgress,
-  Alert,
+  TextField,
 } from "@mui/material";
 import {
   getFirestore,
@@ -82,7 +85,7 @@ const UserDetails = () => {
   const handleSave = async () => {
     try {
       setLoading(true);
-      if (Object.values(updatedUserData).some(value => value.trim() === "")) {
+      if (Object.values(updatedUserData).some((value) => value.trim() === "")) {
         setAlertSeverity("info");
         setAlertMessage("Todos los campos son obligatorios.");
         setAlertOpen(true);
@@ -163,39 +166,46 @@ const UserDetails = () => {
   };
 
   return (
-    <div>
-      <NavBar />  {/* Incluye el componente de la navbar aquí */}
-      <hr></hr>
+    <div style={{ marginTop: "64px" }}> {/* Ajusta este valor según la altura de tu NavBar */}
+      <NavBar /> {/* Incluye el componente de la navbar aquí */}
+      <hr />
 
-      <Typography variant="h6" gutterBottom>
-        Bienvenido: {correoUsuario}
-      </Typography>
-      <Typography variant="h6" gutterBottom>
-        ID de Usuario: {userId}
-      </Typography>
-      <Typography variant="h5" gutterBottom>
-        Nombre: {userData?.nombre}
-      </Typography>
-      <Typography variant="body1" gutterBottom>
-        Edad: {userData?.edad}
-      </Typography>
-      <Typography variant="body1" gutterBottom>
-        Cédula: {userData?.Cedula}
-      </Typography>
-      <Button className="btn1" variant="contained" onClick={handleEdit}>
-        Editar
-      </Button>
+      <Card>
+        <CardContent>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>
+                Bienvenido: {correoUsuario}
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="body1">
+                <strong>Nombre:</strong> {userData?.nombre}
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="body1">
+                <strong>Edad:</strong> {userData?.edad}
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="body1">
+                <strong>Cédula:</strong> {userData?.Cedula}
+              </Typography>
+            </Grid>
+          </Grid>
+          <Button variant="contained" onClick={handleEdit} style={{ marginTop: "16px" }}>
+            Editar
+          </Button>
+        </CardContent>
+      </Card>
 
       <Mensualidades userId={userId} correoUsuario={correoUsuario} />
 
       <Dialog open={isEditing} onClose={handleCancelEdit}>
         <DialogTitle>Actualizar Datos</DialogTitle>
         <DialogContent>
-          {alertOpen && (
-            <Alert severity={alertSeverity}>
-              {alertMessage}
-            </Alert>
-          )}
+          {alertOpen && <Alert severity={alertSeverity}>{alertMessage}</Alert>}
           <TextField
             label="Nombre"
             name="nombre"
@@ -216,8 +226,7 @@ const UserDetails = () => {
             label="Cédula"
             name="Cedula"
             value={updatedUserData.Cedula}
-           
-          fullWidth
+            fullWidth
             onChange={handleChange}
             style={{ marginBottom: "16px" }}
           />
@@ -237,18 +246,19 @@ const UserDetails = () => {
               <CircularProgress
                 size={24}
                 style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
                   marginTop: -12,
                   marginLeft: -12,
-                  color: 'green',
+                  color: "green",
                 }}
               />
             )}
           </Button>
         </DialogActions>
       </Dialog>
+
       <Dialog open={showConfirmationDialog}>
         <DialogTitle>Eliminar</DialogTitle>
         <DialogContent>
@@ -266,12 +276,12 @@ const UserDetails = () => {
               <CircularProgress
                 size={24}
                 style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
                   marginTop: -12,
                   marginLeft: -12,
-                  color: 'red',
+                  color: "red",
                 }}
               />
             )}
