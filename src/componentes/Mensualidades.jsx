@@ -158,26 +158,26 @@ const handleDeleteMensualidad = async (mensualidadId) => {
       let username;
   
       querySnapshot.forEach((doc) => {
-        // doc.data() is never undefined for query doc snapshots
         username = doc.data().username;
       });
   
       // Guardar la nueva mensualidad con el username obtenido
       const mensualidadesCollectionRef = collection(db, "mensualidades");
-      const mensualidadDocRef = await addDoc(mensualidadesCollectionRef, {
+      await addDoc(mensualidadesCollectionRef, {
         clienteId: userId,
         fechaInicio: newMensualidadData.fechaInicio,
         fechaFinalizacion: newMensualidadData.fechaFinalizacion,
         pago: newMensualidadData.pago,
-        admin: username, // Agregar el username del usuario
+        admin: username,
       });
       
-      // Actualizar la fecha de finalización en la colección clientes
+      // Actualizar la fecha de finalización y el pago en la colección clientes
       const clienteDocRef = doc(db, 'clientes', userId);
       await setDoc(clienteDocRef, {
         fechaFinalizacion: newMensualidadData.fechaFinalizacion,
+        pago: newMensualidadData.pago,
       }, { merge: true });
-
+  
       // Resetear los datos del formulario a los valores iniciales
       setNewMensualidadData({
         fechaInicio: "",
@@ -205,7 +205,8 @@ const handleDeleteMensualidad = async (mensualidadId) => {
     } finally {
       setLoading(false);
     }
-};
+  };
+  
 
 
 
